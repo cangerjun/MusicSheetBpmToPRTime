@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>曲谱时间小节计算器</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            padding: 30px 20px;
+            margin-bottom: 30px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, #ff8a00, #e52e71, #22c1c3);
+        }
+
+        h1 {
+            font-size: 3.2rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(to right, #ff8a00, #e52e71, #22c1c3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-size: 1.3rem;
+            opacity: 0.9;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 25px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .card-header i {
+            font-size: 2rem;
+            margin-right: 15px;
+            background: linear-gradient(135deg, #ff8a00, #e52e71);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .card-header h2 {
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 1.1rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: white;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #e52e71;
+            box-shadow: 0 0 0 3px rgba(229, 46, 113, 0.2);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        button {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .calculate-btn {
+            background: linear-gradient(135deg, #22c1c3, #1a2a6c);
+            color: white;
+        }
+
+        .clear-btn {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .calculate-btn:hover {
+            background: linear-gradient(135deg, #1a9da0, #0f1d55);
+        }
+
+        .clear-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .result-box {
+            margin-top: 25px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 10px;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .result-title {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: #ff8a00;
+            font-weight: 600;
+        }
+
+        .result-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .formula {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 1rem;
+            border-left: 3px solid #e52e71;
+        }
+
+        .info {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
+        .frame-result {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px dashed rgba(255, 255, 255, 0.2);
+        }
+
+        .frame-value {
+            font-weight: 700;
+            color: #22c1c3;
+        }
+
+        .timecode-preview {
+            display: inline-block;
+            background: #333;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            margin-top: 5px;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>曲谱时间小节计算器</h1>
+            <p class="subtitle">音乐制作与视频编辑的完美工具 - 精确计算曲谱时间、小节和视频帧数</p>
+        </header>
+
+        <div class="content">
+            <!-- 功能1: 计算时间 -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-clock"></i>
+                    <h2>计算歌曲时间</h2>
+                </div>
+                <div class="form-group">
+                    <label for="number1">小节数</label>
+                    <input type="number" id="number1" name="number1" min="1" placeholder="输入正整数">
+                </div>
+                <div class="form-group">
+                    <label for="number2">每小节拍数</label>
+                    <input type="number" id="number2" name="number2" min="1" placeholder="例如：4（4/4拍）">
+                    <div class="info">例如: 4/4拍输入4, 6/8拍输入6</div>
+                </div>
+                <div class="form-group">
+                    <label for="number3">BPM (每分钟节拍数)</label>
+                    <input type="number" id="number3" name="number3" min="1" max="240" placeholder="1-240之间">
+                    <div class="info">BPM范围: 1-240</div>
+                </div>
+                
+                <div class="button-group">
+                    <button class="calculate-btn" onclick="calculateTime()">计算时间</button>
+                    <button class="clear-btn" onclick="clearInputs('left')">清除</button>
+                </div>
+                
+                <div id="result" class="result-box">
+                    <div class="result-title">计算结果</div>
+                    <div class="result-value">等待计算...</div>
+                </div>
+                
+                <div class="formula">
+                    计算公式: 总时间(秒) = (小节数 × 每小节拍数) ÷ BPM × 60<br>
+                    示例: 100小节, 4拍/小节, 120 BPM → (100×4)/120×60 = 200秒 = 3分20秒
+                </div>
+            </div>
+            
+            <!-- 功能2: 计算小节 -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-music"></i>
+                    <h2>计算小节数</h2>
+                </div>
+                <div class="form-group">
+                    <label for="time">时间 (MM:SS 或 M:SS)</label>
+                    <input type="text" id="time" name="time" placeholder="例如: 3:45 或 1:05">
+                    <div class="info">支持格式: 分:秒 (如 2:30)</div>
+                </div>
+                <div class="form-group">
+                    <label for="beats">每小节拍数</label>
+                    <input type="number" id="beats" name="beats" min="1" placeholder="输入正整数">
+                    <div class="info">例如: 4/4拍输入4, 6/8拍输入6</div>
+                </div>
+                <div class="form-group">
+                    <label for="bpm">BPM (每分钟节拍数)</label>
+                    <input type="number" id="bpm" name="bpm" min="1" max="240" placeholder="1-240之间">
+                    <div class="info">BPM范围: 1-240</div>
+                </div>
+                
+                <div class="button-group">
+                    <button class="calculate-btn" onclick="calculateSectionTime()">计算小节</button>
+                    <button class="clear-btn" onclick="clearInputs('right')">清除</button>
+                </div>
+                
+                <div id="sectionResult" class="result-box">
+                    <div class="result-title">计算结果</div>
+                    <div class="result-value">等待计算...</div>
+                </div>
+                
+                <div class="formula">
+                    计算公式: 小节数 = (总秒数 × BPM) ÷ (每小节拍数 × 60)<br>
+                    示例: 时间3:45 (225秒), 4拍/小节, 120 BPM → (225×120)/(4×60) = 112.5小节
+                </div>
+            </div>
+            
+            <!-- 功能3: 新增的BPM时间与帧数计算 -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-film"></i>
+                    <h2>BPM时间与帧数计算</h2>
+                </div>
+                <div class="form-group">
+                    <label for="newBpm">BPM (每分钟节拍数)</label>
+                    <input type="number" id="newBpm" name="newBpm" min="1" max="240" placeholder="1-240之间">
+                    <div class="info">输入需要计算的BPM值</div>
+                </div>
+                
+                <div class="button-group">
+                    <button class="calculate-btn" onclick="calculateFrameTime()">计算时间与帧数</button>
+                    <button class="clear-btn" onclick="clearInputs('new')">清除</button>
+                </div>
+                
+                <div id="frameResult" class="result-box">
+                    <div class="result-title">计算结果</div>
+                    <div class="result-value">等待计算...</div>
+                    <div class="frame-result">
+                        <div>每节拍时间:</div>
+                        <div class="frame-value" id="beatTime">-</div>
+                    </div>
+                    <div class="frame-result">
+                        <div>30帧视频每节拍帧数:</div>
+                        <div class="frame-value" id="frameCount">-</div>
+                    </div>
+                </div>
+                
+                <div class="formula">
+                    计算公式: <br>
+                    每节拍时间(秒) = 60 / BPM<br>
+                    每节拍帧数 = (60 / BPM) × 30<br>
+                    示例: BPM=120 → 60/120=0.5秒 → 0.5×30=15帧
+                </div>
+            </div>
+            
+            <!-- 功能4: 新增的时间码转换 -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-exchange-alt"></i>
+                    <h2>时间码转换器</h2>
+                </div>
+                <div class="form-group">
+                    <label for="songTime">歌曲时间 (分:秒.毫秒)</label>
+                    <input type="text" id="songTime" name="songTime" placeholder="例如: 3:24.514">
+                    <div class="info">格式: 分:秒.毫秒 (分最大不超过10)</div>
+                    <div class="info">示例: <span class="timecode-preview">3:24.514</span> 表示3分24秒514毫秒</div>
+                </div>
+                
+                <div class="button-group">
+                    <button class="calculate-btn" onclick="convertTimecode()">转换为时间码</button>
+                    <button class="clear-btn" onclick="clearInputs('timecode')">清除</button>
+                </div>
+                
+                <div id="timecodeResult" class="result-box">
+                    <div class="result-title">时间码结果</div>
+                    <div class="result-value" id="timecodeValue">00:00:00</div>
+                    <div class="frame-result">
+                        <div>格式:</div>
+                        <div class="frame-value">分:秒:帧</div>
+                    </div>
+                    <div class="frame-result">
+                        <div>帧率:</div>
+                        <div class="frame-value">30 FPS</div>
+                    </div>
+                </div>
+                
+                <div class="formula">
+                    计算公式: <br>
+                    总毫秒 = (分×60 + 秒)×1000 + 毫秒<br>
+                    总帧数 = 总毫秒 × 30 / 1000<br>
+                    时间码 = 分:秒:帧 (帧数四舍五入)<br>
+                    示例: 3:24.514 → 3分24秒514毫秒 → 转换为时间码 03:24:15
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>曲谱时间小节计算器 &copy; 2023 | 专为音乐制作人和视频编辑设计</p>
+        </footer>
+    </div>
+
+    <script>
+        function calculateTime() {
+            // 获取输入值
+            const sections = parseInt(document.getElementById('number1').value);
+            const beatsPerSection = parseInt(document.getElementById('number2').value);
+            const bpm = parseInt(document.getElementById('number3').value);
+            
+            // 获取结果显示元素
+            const resultElement = document.querySelector('#result .result-value');
+            
+            // 验证输入
+            if (isNaN(sections) || sections < 1) {
+                resultElement.innerHTML = '<span style="color:#ff6b6b">错误：请输入有效的小节数（≥1）</span>';
+                return;
+            }
+            
+            if (isNaN(beatsPerSection) || beatsPerSection < 1) {
+                resultElement.innerHTML = '<span style="color:#ff6b6b">错误：请输入有效的拍数（≥1）</span>';
+                return;
+            }
+            
+            if (isNaN(bpm) || bpm < 1 || bpm > 240) {
+                resultElement.innerHTML = '<span style="color:#ff6b6b">错误：请输入有效的BPM（1-240）</span>';
+                return;
+            }
+            
+            // 计算总时间（秒）
+            const totalSeconds = (sections * beatsPerSection / bpm) * 60;
+            
+            // 转换为分钟和秒
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = Math.floor(totalSeconds % 60);
+            const milliseconds = Math.round((totalSeconds - Math.floor(totalSeconds)) * 1000);
+            
+            // 格式化结果显示
+            let resultText = `${minutes}分${seconds}秒`;
+            if (milliseconds > 0) {
+                resultText += ` ${milliseconds}毫秒`;
+            }
+            
+            resultText += `<br><span style="font-size:0.9em;opacity:0.8">(${totalSeconds.toFixed(3)} 秒)</span>`;
+            resultElement.innerHTML = resultText;
+        }
+
+        function calculateSectionTime() {
+            // 获取输入值
+            const timeInput = document.getElementById('time').value;
+            const beatsPerSection = parseInt(document.getElementById('beats').value);
+            const bpm = parseInt(document.getElementById('bpm').value);
+            
+            // 获取结果显示元素
+            const resultElement = document.querySelector('#sectionResult .result-value');
+            
+            // 验证输入
+            if (isNaN(beatsPerSection) || beatsPerSection < 1) {
+                resultElement.innerHTML = '<span style="color:#ff6b6b">错误：请输入有效的拍数（≥1）</span>';
+                return;
+            }
+            
+            if (isNaN(bpm) || bpm < 1 || bpm > 240) {
+                resultElement.innerHTML = '<span style="color:#ff6b6b">错误：请输入有效的BPM（1-240）</span>';
+                return;
+            }
+            
+            // 验证并解析时间输入
+            const timePattern = /^(\d+):([0-5]?[0-9])$/;
+            if (!timePattern.test(timeInput)) {
+                resultElement.innerHTML = '<span style="color:#ff6b6b">错误：时间格式不正确（使用 MM:SS 或 M:SS）</span>';
+                return;
+            }
+            
+            const [_, minutesPart, secondsPart] = timeInput.match(timePattern);
+            const minutes = parseInt(minutesPart);
+            const seconds = parseInt(secondsPart);
+            
+            if (minutes < 0 || seconds < 0 || (minutes === 0 && seconds === 0)) {
+                resultElement.innerHTML = '<span style="color:#ff6b6b">错误：时间必须大于0</span>';
+                return;
+            }
+            
+            // 计算总秒数
+            const totalSeconds = minutes * 60 + seconds;
+            
+            // 计算小节数
+            const totalBeats = (totalSeconds * bpm) / 60;
+            const sections = totalBeats / beatsPerSection;
+            
+            // 分离整数和小数部分
+            const fullSections = Math.floor(sections);
+            const partialBeats = (sections - fullSections) * beatsPerSection;
+            
+            // 格式化结果显示
+            let resultText = `${sections.toFixed(2)}小节<br>`;
+            resultText += `= ${fullSections}小节`;
+            
+            if (partialBeats > 0.001) {
+                resultText += ` + ${partialBeats.toFixed(2)}拍`;
+            }
+            
+            resultElement.innerHTML = resultText;
+        }
+        
+        // 新功能：计算BPM时间和帧数
+        function calculateFrameTime() {
+            const bpm = parseInt(document.getElementById('newBpm').value);
+            const resultElement = document.querySelector('#frameResult .result-value');
+            const beatTimeElement = document.getElementById('beatTime');
+            const frameCountElement = document.getElementById('frameCount');
+            
+            if (isNaN(bpm) || bpm < 1 || bpm > 240) {
+                resultElement.innerHTML = '<span style="color:#ff6b6b">错误：请输入有效的BPM（1-240）</span>';
+                beatTimeElement.textContent = '-';
+                frameCountElement.textContent = '-';
+                return;
+            }
+            
+            // 计算每节拍时间（秒）
+            const beatTime = 60 / bpm;
+            
+            // 计算30fps视频中每节拍对应的帧数
+            const frameCount = beatTime * 30;
+            
+            // 更新结果显示
+            resultElement.innerHTML = `BPM: ${bpm}`;
+            beatTimeElement.textContent = `${beatTime.toFixed(3)}秒`;
+            frameCountElement.textContent = `${frameCount.toFixed(2)}帧`;
+        }
+        
+        // 新功能：时间码转换
+        function convertTimecode() {
+            const songTime = document.getElementById('songTime').value;
+            const resultElement = document.getElementById('timecodeValue');
+            
+            // 验证输入格式：分:秒.毫秒
+            const pattern = /^(\d{1,2}):(\d{1,2})\.(\d{1,3})$/;
+            if (!pattern.test(songTime)) {
+                resultElement.innerHTML = '<span style="color:#ff6b6b">格式错误！使用 分:秒.毫秒 (如 3:24.514)</span>';
+                return;
+            }
+            
+            const [_, minutesPart, secondsPart, msPart] = songTime.match(pattern);
+            const minutes = parseInt(minutesPart);
+            const seconds = parseInt(secondsPart);
+            const milliseconds = parseInt(msPart.padEnd(3, '0').substring(0,3)); // 确保毫秒为三位数
+            
+            // 验证分钟（最大不超过10）
+            if (minutes > 10) {
+                resultElement.innerHTML = '<span style="color:#ff6b6b">分钟不能超过10！</span>';
+                return;
+            }
+            
+            // 验证秒数
+            if (seconds > 59) {
+                resultElement.innerHTML = '<span style="color:#ff6b6b">秒数不能超过59！</span>';
+                return;
+            }
+            
+            // 计算总毫秒数
+            const totalMilliseconds = (minutes * 60 + seconds) * 1000 + milliseconds;
+            
+            // 计算帧数（30fps）
+            const totalFrames = Math.round(totalMilliseconds * 30 / 1000);
+            
+            // 转换为时间码（分:秒:帧）
+            const timecodeMinutes = Math.floor(totalFrames / (30 * 60));
+            const remainingFrames = totalFrames % (30 * 60);
+            const timecodeSeconds = Math.floor(remainingFrames / 30);
+            const timecodeFrames = remainingFrames % 30;
+            
+            // 格式化时间码
+            const formattedMinutes = String(timecodeMinutes).padStart(2, '0');
+            const formattedSeconds = String(timecodeSeconds).padStart(2, '0');
+            const formattedFrames = String(timecodeFrames).padStart(2, '0');
+            
+            // 显示结果
+            resultElement.innerHTML = `${formattedMinutes}:${formattedSeconds}:${formattedFrames}`;
+        }
+        
+        function clearInputs(side) {
+            if (side === 'left') {
+                document.getElementById('number1').value = '';
+                document.getElementById('number2').value = '';
+                document.getElementById('number3').value = '';
+                document.querySelector('#result .result-value').textContent = '等待计算...';
+            } else if (side === 'right') {
+                document.getElementById('time').value = '';
+                document.getElementById('beats').value = '';
+                document.getElementById('bpm').value = '';
+                document.querySelector('#sectionResult .result-value').textContent = '等待计算...';
+            } else if (side === 'new') {
+                document.getElementById('newBpm').value = '';
+                document.querySelector('#frameResult .result-value').textContent = '等待计算...';
+                document.getElementById('beatTime').textContent = '-';
+                document.getElementById('frameCount').textContent = '-';
+            } else if (side === 'timecode') {
+                document.getElementById('songTime').value = '';
+                document.getElementById('timecodeValue').textContent = '00:00:00';
+            }
+        }
+    </script>
+</body>
+</html>
